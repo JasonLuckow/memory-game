@@ -1,34 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState } from 'react';
 import './App.css'
+import { GameHeader } from './components/display/GameHeader'
+import { GameTiles } from './components/display/GameTiles'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [data, setData] = useState({
+    currentScore: 0,
+    bestScore: 0,
+    previousSelections: new Set()
+  });
+
+  const handleScoreChange = (selection) => {
+    setData((prevData) => {
+
+      if (prevData.previousSelections.has(selection)) {
+          const newBestScore = Math.max(prevData.currentScore, prevData.bestScore);
+          return {
+          bestScore: newBestScore,
+          currentScore: 0,
+          previousSelections: new Set() 
+        };
+      } else {
+          const newScore = prevData.currentScore + 1;
+          const newSelections = new Set(prevData.previousSelections);
+          newSelections.add(selection);
+    
+          return {
+            ...prevData,
+            currentScore: newScore,
+            previousSelections: newSelections
+          };
+      }
+
+   });
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className='app-container'>
+      <GameHeader currentScore={data.currentScore} bestScore={data.bestScore}/>
+      <GameTiles handleScoreChange={handleScoreChange}/>
+    </div>
   )
 }
 
