@@ -3,13 +3,21 @@ import "../../styles/display/gameTiles.css"
 
 function TileItem({ image, handleTileClicked }) {
 
-    const [imageUrl, setImageUrl] = useState(image.toLowerCase());
+    const [imageUrl, setImageUrl] = useState();
+    const [error, setError] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     async function getImage(props) {
-        const response = await fetch(formApi({image: props.image}), {mode: 'cors'});
-        const json = await response.json();
-        const imagePath = processJsonPayload(json);
-        setImageUrl(imagePath)
+        fetch(formApi({image: props.image}), {mode: 'cors'})
+            .then((response) => {
+                if (response.status >= 400) 
+                    throw new Error("server error");
+
+                return response.json();
+            })
+            .then((response) => setImageUrl(processJsonPayload(response)))
+            .catch((error) => setError(error))
+            .finally(() => setLoading(false));
     }
 
     function formApi(props) {
@@ -22,13 +30,24 @@ function TileItem({ image, handleTileClicked }) {
     }
 
     useEffect(() => {
-        getImage({image: imageUrl});
+        if (imageUrl != null) return; // If image is already loaded, do nothing
+        getImage({image: image.toLowerCase()});
     }, [])
 
     const handleClick = () => {
         handleTileClicked({image})
     }
 
+    if (loading) return <button className="tile-button" onClick={handleClick}>
+        <p>Loading...</p>
+        <p>{image}</p>
+    </button>
+        
+    if (error) return <button className="tile-button" onClick={handleClick}>
+        <p>A network error was encountered</p>
+        <p>{image}</p>
+    </button>
+    
 
     return <button className="tile-button" onClick={handleClick}>
         <div 
@@ -41,7 +60,7 @@ function TileItem({ image, handleTileClicked }) {
         }}>
 
         </div>
-        {image}
+        <p>{image}</p>
     </button>
 }
 
